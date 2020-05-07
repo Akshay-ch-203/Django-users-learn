@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'css/my_style.css' %}">
+</head>
+<body>
+    <!-- Setting the navbar and its style -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+
+      <!-- Setting the brand(main letter on left) here ""-->
+      <a class="navbar-brand" href="{% url 'index' %}">
+        <img id="logo_brand" src="{% static 'images/sootran.jpeg' %}" class="d-inline-block align-top" alt="Na NAA, Error!">
+      Sootran
+      </a>
+
+      <!-- Adding the Hamburger button -->
+      <button class="navbar-toggler ml-auto custom-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Dropdown and adding the Home link, ul > li item > content(anchor tag)-->
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="{% url 'admin:index' %}">Admin<span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="{% url 'basic_app:register' %}">Register<span class="sr-only">(current)</span></a>
+          </li>
+          {% if user.is_authenticated %}
+          <li class="nav-item active">
+            <a class="nav-link" href="{% url 'logout' %}">Logout<span class="sr-only">(current)</span></a>
+          </li>
+          {% else %}
+          <li class="nav-item active">
+            <a class="nav-link" href="{% url 'basic_app:user_login' %}">Login<span class="sr-only">(current)</span></a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </nav>
+    <div class="container">
+        <div class="jumbotron">
+            {% block body_block %}
+            <!-- Anything inside will be protected  -->
+            <h1 class="display-4">Hello, world!</h1>
+            {% endblock %}
+        </div>
+    </div>
+</body>
+<!--Compailed JS Bootstrap-->
+<!-- Necessory js and bootstrap files -->
+    <script
+    src="https://code.jquery.com/jquery-3.4.1.js"
+    integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+    crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</html>
