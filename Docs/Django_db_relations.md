@@ -2,6 +2,8 @@
 
 ---
 
+Execute a py script from django shell using the manage.py, `$ ./manage.py shell < sample.py`. That assigns the settings automatically
+
 ## 1. [One to One](https://docs.djangoproject.com/en/3.1/topics/db/examples/one_to_one/)
 
 One row of table A linked with one row of table B, (normal :) - hus-wife analogy)\
@@ -169,3 +171,139 @@ There are some other options, lets use them in an example to get mores sense.
 
 * Now a one-to-one relation is added explicitly, looking at the sql table a new key, ('page_in_id') replaces the inherited id ('page_ptr_id). cz the primary key is set true in the relation.
 * Now a like object is created by a user, a page object is created automatically.
+* And if the user is deleted pages and like will get deleted, cascading
+* If the page gets deleted like too gets deleted.
+* If the Like is deleted page will get deleted, and cz of our custom signals operation, the user will also get deleted.
+
+## 2. [Many to One](https://docs.djangoproject.com/en/3.1/topics/db/examples/many_to_one/)
+
+* When one or more row of table B can be linked to one row of table A.
+* analogy:- Father children relationship.
+* Eg:-
+  | ID  | Username | passw     |
+  | --- | -------- | --------- |
+  | 1   | Akshay   | Aks123    |
+  | 2   | Rahul    | rahul233  |
+  | 3   | Preethi  | preethi45 |
+
+  There is a Post model, one user can make many posts as he need, like in a common blog application.
+
+  | ID  | post_title | post_info | publish_date | User_id |
+  | --- | ---------- | --------- | ------------ | ------- |
+  | 1   | Title 1    | django    | 11-09-2000   | 1       |
+  | 2   | Title 2    | django    | 11-09-2003   | 1       |
+  | 3   | Title 3    | python    | 9-10-2002    | 2       |
+
+  Here Akshay with ID=1 made 2 posts\
+  In django, To define a many-to-one relationship, use `ForeignKey`. You use it just like any other field type, including it as a class attribute.
+
+  syntax:- `ForeignKey(to, on_delete, **options)`
+
+  It requires two positional arguments:- The class to which the model is related and the `on_delete` option.
+
+  The attributes are same as ones with the one-to-one relationship.
+
+* Eg:-
+  A model is created with,
+
+  ```python
+  from django.db import models
+  from django.contrib.auth.models import User
+  from django.utils import timezone
+
+
+  class Post(models.Model):
+      user = models.ForeignKey(User, on_delete=models.CASCADE)
+      post_title = models.CharField(max_length=100)
+      post_info = models.CharField(max_length=100)
+      publish_date = models.DateTimeField(default=timezone.now)
+  ```
+
+#### *Extra:- Django timezones using [timezone.now()](https://docs.djangoproject.com/en/3.1/topics/i18n/timezones/), Refer your own answer [here](https://stackoverflow.com/a/65248861/12167598),*
+
+  and register this model in admin,\
+  now looking at the sql, there are `id(PK), post_title, post_info, publish_date, user_id`, can see that now post id is the Primary Key. If we set `primary_key=True` in user relation, the `user_id` will be the primary key.
+* Now one user can create as many posts as the relation is many-to-one.
+* If the user is deleted, the posts will be deleted with that, reverse not happens(dont got any explicit signals relation here)
+* If `on_delete=models.PROTECT`, and if user is deleted it gives posts are preserved error, and can only deleted the user if only all posts are deleted.
+* In a third case, if the posts are needed to be preserved and the users can be delete, we can set a `NULL` in the Post fields where user_id existed(cz, the user not exists now).
+
+  ```python
+  user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+  ```
+
+  Now the posts are preserved even if the user didn't exists.
+
+## 3. [Many to Many](https://docs.djangoproject.com/en/3.1/topics/db/examples/many_to_many/)
+
+* When one row of table A can be linked to one or more rows of table B, and **vice versa**.
+* An analogical example can be a web app made by many developers, but they also takes part in the development of other apps too. simply one can build many apps, or many can join to build one app.
+* A perfect practical example is the relation of an artists to the song title, one artist can have many songs and one songs can got many artists.
+* Artist model
+
+  | ID  | artist_name  |
+  | --- | ------------ |
+  | 1   | bony_M       |
+  | 2   | Ricky_Martin |
+  | 3   | Jimmy_Cliff  |
+
+* Song model
+
+  | ID  | song_name         | song_duration |
+  | --- | ----------------- | ------------- |
+  | 1   | Lets have fun     | 4             |
+  | 2   | cup of life       | 3             |
+  | 3   | I can see clearly | 5             |
+
+  Django inside makes a song_artist model, to maintain the relation(many-to-many) happening inside,ie one song can have many artists, and one artist can make many songs too.
+
+  | ID  | song_id | artist_id |
+  | --- | ------- | --------- |
+  | 1   | 1       | 1         |
+  | 2   | 1       | 2         |
+  | 3   | 2       | 3         |
+  | 4   | 2       | 2         |
+
+  Here the artist_1 and 2 linked to song_1, also artist_2 linked to song_3 too,
+
+* In Django many-to-many relationship, defined using ManyToManyField. with required attribute of class it is linking to.
+
+  Syntax:- `ManyToManyField(to, **option)`
+
+  Example:-
+
+  ```python
+  class Artist(models.Model):
+      name = models.CharField(max_length=200)
+      genere = models.CharField(max_length=100)
+      # https://ramseyvoice.com/voice-types/
+      voice_type = models.CharField(max_length=50)
+
+      def __str__(self):
+        # required to show the name of the artist in the selection pane
+        return self.name
+
+
+  class Song(models.Model):
+      artist = models.ManyToManyField(Artist)
+      song_name = models.CharField(max_length=200)
+      song_duration = models.IntegerField()
+  ```
+
+  Create the table and register in admin,
+
+* looking at the sql table, can see an extra table `myapp_song_artist` that stores the relation.
+* In the admin panel `add_song` area there is the whole list of artists available for selection. can select one or multiple to link to a song, also one artist can have multiple songs.
+* But there is a problem, we can't identify who sings the song, so can make a function to return that value(ie the name of the artists) in the admin area.
+
+  ```python
+  def artist_name(self):
+        # There is multiple artists
+        return ", ".join([artist.name for artist in self.artist.all()])
+  ```
+
+  Add that field too, in the admin area.
+
+* The deletions are not default dependent, If we delete one artist the artist name is set null in the song field this behavior can be changed using, model managers or tackling signals.
+
+## Example containing the three relationships

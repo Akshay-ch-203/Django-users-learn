@@ -155,3 +155,5 @@ vscode-django
 settings.json
 .vscode
 uploads
+# not need to upload all the practice django projects to the repo
+practiceDj
